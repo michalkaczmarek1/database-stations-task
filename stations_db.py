@@ -7,7 +7,8 @@ meta = MetaData()
 
 stations = Table(
     'stations', meta,
-    Column('station', String, primary_key=True),
+    Column('id', Integer, primary_key=True),
+    Column('station', String),
     Column('latitude', Numeric),
     Column('longitude', Numeric),
     Column('elevation', Numeric),
@@ -29,6 +30,14 @@ if __name__ == "__main__":
     meta.create_all(engine)
 
     conn = engine.connect()
+
+    # delete all data from tables
+    deleteTableStations = stations.delete()
+    deleteTableCleanMeasure = clean_measure.delete()
+    conn.execute(deleteTableStations)
+    conn.execute(deleteTableCleanMeasure)
+
+    # insert data
     ins_stat = stations.insert()
     conn.execute(ins_stat, [
         {'station': 'USC00519397', 'latitude': 21.2716, 'longitude': -157.8168,
@@ -75,5 +84,22 @@ if __name__ == "__main__":
             2012, 9, 26), 'precip': 0.02, 'tobs': 74}
     ])
 
-    result = conn.execute("SELECT * FROM stations LIMIT 5").fetchall()
-    print(result)
+    # update
+    upd = stations.update().where(stations.c.id == 1).values(name="test", country="PL")
+    conn.execute(upd)
+
+    # delete with where
+    delete = stations.delete().where(stations.c.id == 9)
+    conn.execute(delete)
+
+    # select with limit
+    select = stations.select().limit(5)
+    result = conn.execute(select)
+    for row in result:
+        print(row)
+
+    # select with where
+    selectWhere = stations.select().where(stations.c.name == "test")
+    result = conn.execute(selectWhere)
+    for row in result:
+        print(row)
